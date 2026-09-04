@@ -1,8 +1,18 @@
-import { getQueueToken } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef, Reflector } from '@nestjs/core';
-import { JobType, JobsOptions, Queue, Worker } from 'bullmq';
+import {
+  assertSchemaCompatibility,
+  createPostgresBackend,
+  JobsOptions,
+  JobType,
+  PostgresConnectionOptions,
+  PostgresQueueBackend,
+  Queue,
+  runMigrations,
+  Worker,
+} from 'bullmq';
 import { setTimeout } from 'node:timers/promises';
+import { Pool } from 'pg';
 import { JobConfig } from 'src/decorators.js';
 import { QueueJobResponseDto, QueueJobSearchDto } from 'src/dtos/queue.dto.js';
 import { ImmichWorker, JobName, JobStatus, MetadataKey, QueueCleanType, QueueJobStatus, QueueName } from 'src/enum.js';
@@ -10,6 +20,7 @@ import { ConfigRepository } from 'src/repositories/config.repository.js';
 import { EventRepository } from 'src/repositories/event.repository.js';
 import { LoggingRepository } from 'src/repositories/logging.repository.js';
 import type { JobCounts, JobItem, JobOf } from 'src/types.js';
+import { getPgPoolConfig } from 'src/utils/database.js';
 import { ImmichStartupError, getKeyByValue, getMethodNames } from 'src/utils/misc.js';
 
 type JobMapItem = {
@@ -23,10 +34,16 @@ const WORKER_WATCH_INTERVAL_MS = 30_000;
 
 @Injectable()
 export class JobRepository {
-  private workers: Partial<Record<QueueName, Worker>> = {};
+  private workers: Partial<
+    Record<QueueName, Worker<any, any, string, PostgresQueueBackend, any, PostgresConnectionOptions>>
+  > = {};
+  private queues: Partial<
+    Record<QueueName, Queue<any, any, string, any, any, string, PostgresQueueBackend, PostgresConnectionOptions>>
+  > = {};
   private handlers: Partial<Record<JobName, JobMapItem>> = {};
   private workerWatcher?: ReturnType<typeof setInterval>;
   private microservicesPresent = true;
+  private pool?: Pool;
 
   constructor(
     private moduleRef: ModuleRef,
@@ -37,10 +54,9 @@ export class JobRepository {
     this.logger.setContext(JobRepository.name);
   }
 
-  setup(services: (new (...args: any[]) => unknown)[]) {
+  async setup(services: (new (...args: any[]) => unknown)[]) {
     const reflector = this.moduleRef.get(Reflector, { strict: false });
 
-    // discovery
     for (const Service of services) {
       const instance = this.moduleRef.get<any>(Service);
       for (const methodName of getMethodNames(instance)) {
@@ -53,7 +69,6 @@ export class JobRepository {
         const { name: jobName, queue: queueName } = config;
         const label = `${Service.name}.${handler.name}`;
 
-        // one handler per job
         if (Object.hasOwn(this.handlers, jobName)) {
           const jobKey = getKeyByValue(JobName, jobName);
           const errorMessage = `Failed to add job handler for ${label}`;
@@ -74,7 +89,6 @@ export class JobRepository {
       }
     }
 
-    // no missing handlers
     for (const [jobKey, jobName] of Object.entries(JobName)) {
       const item = this.handlers[jobName];
       if (!item) {
@@ -85,6 +99,36 @@ export class JobRepository {
         throw new ImmichStartupError(errorMessage);
       }
     }
+
+    const { database, bull } = this.configRepository.getEnv();
+    const queueNames = Object.values(QueueName);
+    this.pool = new Pool({
+      ...getPgPoolConfig(database.config),
+      options: '-c search_path=bullmq,public',
+      keepAlive: true,
+      max: this.configRepository.getWorker() === ImmichWorker.Microservices ? queueNames.length + 8 : 8,
+    });
+    this.pool.setMaxListeners(queueNames.length * 2 + 1);
+
+    try {
+      const client = await this.pool.connect();
+      try {
+        if (database.skipMigrations) {
+          await assertSchemaCompatibility(client);
+        } else {
+          await runMigrations(client);
+        }
+      } finally {
+        client.release();
+      }
+
+      for (const queueName of queueNames) {
+        this.queues[queueName] = new Queue(queueName, { connection: this.pool, ...bull.config }, createPostgresBackend);
+      }
+    } catch (error) {
+      await this.teardown();
+      throw error;
+    }
   }
 
   startWorkers() {
@@ -94,7 +138,8 @@ export class JobRepository {
       this.workers[queueName] = new Worker(
         queueName,
         (job) => this.eventRepository.emit('JobRun', queueName, job as JobItem),
-        { ...bull.config, concurrency: 1, name: ImmichWorker.Microservices },
+        { connection: this.pool!, ...bull.config, concurrency: 1, name: ImmichWorker.Microservices },
+        createPostgresBackend,
       );
     }
   }
@@ -103,21 +148,28 @@ export class JobRepository {
     this.workerWatcher ??= setInterval(() => void this.checkWorkers(), WORKER_WATCH_INTERVAL_MS);
   }
 
-  teardown() {
-    if (!this.workerWatcher) {
-      return;
+  async teardown() {
+    if (this.workerWatcher) {
+      clearInterval(this.workerWatcher);
+      this.workerWatcher = undefined;
     }
 
-    clearInterval(this.workerWatcher);
-    this.workerWatcher = undefined;
+    await Promise.all(Object.values(this.workers).map((worker) => worker.close()));
+    this.workers = {};
+    await Promise.all(Object.values(this.queues).map((queue) => queue.close()));
+    this.queues = {};
+    await this.pool?.end();
+    this.pool = undefined;
   }
 
   private async checkWorkers() {
     let isPresent: boolean;
     try {
-      const suffix = `:w:${ImmichWorker.Microservices}`;
       const workers = await this.getQueue(QueueName.BackgroundTask).getWorkers();
-      isPresent = workers.some((worker) => worker.rawname?.endsWith(suffix));
+      const suffix = `:w:${ImmichWorker.Microservices}`;
+      isPresent = workers.some(
+        (worker) => worker.name === ImmichWorker.Microservices || worker.rawname?.endsWith(suffix),
+      );
     } catch {
       return;
     }
@@ -180,7 +232,7 @@ export class JobRepository {
     return this.getQueue(name).clean(0, 1000, type);
   }
 
-  getJobCounts(name: QueueName): Promise<JobCounts> {
+  async getJobCounts(name: QueueName): Promise<JobCounts> {
     return this.getQueue(name).getJobCounts(
       'active',
       'completed',
@@ -210,7 +262,6 @@ export class JobRepository {
       } as JobItem & { data: any; options: JobsOptions | undefined };
 
       if (job.options?.jobId || job.options?.deduplication) {
-        // need to use add() instead of addBulk() for jobId/deduplication to take effect
         promises.push(this.getQueue(queueName).add(item.name, item.data, job.options));
       } else {
         itemsByQueue[queueName] ||= [];
@@ -246,12 +297,17 @@ export class JobRepository {
   }
 
   async searchJobs(name: QueueName, dto: QueueJobSearchDto): Promise<QueueJobResponseDto[]> {
-    const items = new Set<QueueJobStatus>(dto.status ?? Object.values(QueueJobStatus));
-    if (items.delete(QueueJobStatus.Paused)) {
-      items.add(QueueJobStatus.Waiting);
+    const queue = this.getQueue(name);
+    const isPaused = await queue.isPaused();
+    const statuses = (dto.status ?? Object.values(QueueJobStatus))
+      .filter((status) =>
+        status === QueueJobStatus.Paused ? isPaused : !(isPaused && status === QueueJobStatus.Waiting),
+      )
+      .map((status) => (status === QueueJobStatus.Paused ? QueueJobStatus.Waiting : status)) as JobType[];
+    if (statuses.length === 0) {
+      return [];
     }
-
-    const jobs = await this.getQueue(name).getJobs([...items] as JobType[], 0, 1000);
+    const jobs = await queue.getJobs(statuses, 0, 1000);
     return jobs.map((job) => {
       const { id, name, timestamp, data } = job;
       return { id, name: name as JobName, timestamp, data };
@@ -287,8 +343,14 @@ export class JobRepository {
     }
   }
 
-  private getQueue(queue: QueueName): Queue {
-    return this.moduleRef.get<Queue>(getQueueToken(queue), { strict: false });
+  private getQueue(
+    queue: QueueName,
+  ): Queue<any, any, string, any, any, string, PostgresQueueBackend, PostgresConnectionOptions> {
+    const instance = this.queues[queue];
+    if (!instance) {
+      throw new Error(`Queue not initialized: ${queue}`);
+    }
+    return instance;
   }
 
   /** @deprecated */

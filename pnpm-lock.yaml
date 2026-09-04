@@ -571,9 +571,6 @@ importers:
       '@immich/sql-tools':
         specifier: ^0.7.0
         version: 0.7.0
-      '@nestjs/bullmq':
-        specifier: ^12.0.0
-        version: 12.0.0(@nestjs/common@12.2.0(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.2.0)(bullmq@6.4.0(ioredis@6.0.0(supports-color@8.1.1))(pg@8.23.1))
       '@nestjs/common':
         specifier: ^12.0.0
         version: 12.2.0(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1)
@@ -607,9 +604,6 @@ importers:
       '@opentelemetry/instrumentation-http':
         specifier: ^0.300.0
         version: 0.300.0(@opentelemetry/api@1.10.0)(supports-color@8.1.1)
-      '@opentelemetry/instrumentation-ioredis':
-        specifier: ^0.72.0
-        version: 0.72.0(@opentelemetry/api@1.10.0)(supports-color@8.1.1)
       '@opentelemetry/instrumentation-nestjs-core':
         specifier: ^0.71.0
         version: 0.71.0(@opentelemetry/api@1.10.0)(supports-color@8.1.1)
@@ -631,9 +625,9 @@ importers:
       '@simplewebauthn/server':
         specifier: 14.0.3
         version: 14.0.3
-      '@socket.io/redis-adapter':
-        specifier: ^8.3.0
-        version: 8.3.0(socket.io-adapter@2.5.8(supports-color@8.1.1))(supports-color@8.1.1)
+      '@socket.io/postgres-adapter':
+        specifier: 0.5.0
+        version: 0.5.0(socket.io-adapter@2.5.8(supports-color@8.1.1))(supports-color@8.1.1)
       aaguids:
         specifier: ^0.0.72
         version: 0.0.72
@@ -691,9 +685,6 @@ importers:
       helmet:
         specifier: ^8.1.0
         version: 8.3.0
-      ioredis:
-        specifier: ^6.0.0
-        version: 6.0.0(supports-color@8.1.1)
       jose:
         specifier: ^6.0.0
         version: 6.2.13
@@ -869,6 +860,9 @@ importers:
       '@types/nodemailer':
         specifier: ^8.0.0
         version: 8.0.2
+      '@types/pg':
+        specifier: ^8.11.0
+        version: 8.23.1
       '@types/picomatch':
         specifier: ^4.0.0
         version: 4.0.3
@@ -3782,6 +3776,10 @@ packages:
   '@microsoft/tsdoc@0.17.1':
     resolution: {integrity: sha512-VHyYyyoH63jFoO3shpw9Zfijk5v/9p/VrClW35z0/q6ooK7sSmxpzOkS4iZPxs3vO4XtBW4H38HRAKkAMIK7DA==}
 
+  '@msgpack/msgpack@2.8.0':
+    resolution: {integrity: sha512-h9u4u/jiIRKbq25PM+zymTyW6bhTzELvOoUd+AvYriWOAKpLGnIamaET3pnHYoI5iYphAHBI4ayx0MehR+VVPQ==}
+    engines: {node: '>= 10'}
+
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4':
     resolution: {integrity: sha512-LCkGo6JDfaBhgST7UpPWgNgLINpcpabaHfyz5OBx75nUYxBsaEPxjnyNjWpeb/xBup/682QnBfRBy2/LvPutZQ==}
     cpu: [arm64]
@@ -3821,19 +3819,6 @@ packages:
     peerDependencies:
       '@emnapi/core': ^1.7.1 || ^2.0.0-alpha.4
       '@emnapi/runtime': ^1.7.1 || ^2.0.0-alpha.4
-
-  '@nestjs/bull-shared@12.0.0':
-    resolution: {integrity: sha512-OShKmwIt00oK2DIqKP4mjh9C2RQsoHPZbBsQwbnETPmK/+Ld1xyYQa1WOrYKKA8qoSzZJvxQaA6/4sV5SfAIyA==}
-    peerDependencies:
-      '@nestjs/common': ^10.0.0 || ^11.0.0 || ^12.0.0
-      '@nestjs/core': ^10.0.0 || ^11.0.0 || ^12.0.0
-
-  '@nestjs/bullmq@12.0.0':
-    resolution: {integrity: sha512-8aOL+TA2W6BgWVeNroofk4CDJrutPt8m+Kp5oghwOUHF73mSPDWTS2vPssuF8IrBq8g195JnKAc2Tu1OdQidLQ==}
-    peerDependencies:
-      '@nestjs/common': ^10.0.0 || ^11.0.0 || ^12.0.0
-      '@nestjs/core': ^10.0.0 || ^11.0.0 || ^12.0.0
-      bullmq: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0
 
   '@nestjs/cli@12.0.11':
     resolution: {integrity: sha512-ExNgbKfhwMNXCV6FbQQnQOcxuubkDPcpYXUh+jkFn5Xm+WkdP+wjYS0KqyZgFSfpY24mST6y50UOEHVsvQME1A==}
@@ -4126,12 +4111,6 @@ packages:
     peerDependencies:
       '@opentelemetry/api': ^1.3.0
 
-  '@opentelemetry/instrumentation-ioredis@0.72.0':
-    resolution: {integrity: sha512-Z3btRN3tAVKbc48h4LuHTfOOnQdrhJ5PdtYAhvXkbdH2neBo8FSvpr4PIt4nvqk6XO5Gyqba3CeP48zaOmrYkQ==}
-    engines: {node: '>=22.15.0'}
-    peerDependencies:
-      '@opentelemetry/api': ^1.3.0
-
   '@opentelemetry/instrumentation-nestjs-core@0.71.0':
     resolution: {integrity: sha512-EGqspwpbOdarPoXz2TQfvxiKvYujCW2REJM65/pr9SnuF+kW9oWHbJLypKAoxF14SF0SWHIwD7T8OrTmmfqcMQ==}
     engines: {node: '>=22.15.0'}
@@ -4173,10 +4152,6 @@ packages:
     engines: {node: '>=22.15.0'}
     peerDependencies:
       '@opentelemetry/api': '>=1.0.0 <1.11.0'
-
-  '@opentelemetry/redis-common@0.39.0':
-    resolution: {integrity: sha512-LwhsURMcyCigjnQHni9RAt0ezrVRxcb6kIE2UTbVI1cxxteeH8mTpPV7xBOVEG2GEm1GniEPLeVkXFHgiIw3xg==}
-    engines: {node: '>=22.15.0'}
 
   '@opentelemetry/resources@3.0.0':
     resolution: {integrity: sha512-4762KVmlDroRIt+4Ra8AnwcQqdXlkAR55jDrhzna8bzhJx1mUzvHW/Lh/OemFuY9+ouM4xaDc6CbUmoJmM6BFg==}
@@ -4771,9 +4746,9 @@ packages:
   '@socket.io/component-emitter@3.1.2':
     resolution: {integrity: sha512-9BCxFwvbGg/RsZK9tjXd8s4UcwR0MWeFQ1XEKIQVVvAGJyINdrqKMcTRyLoK8Rse1GjzLV9cwjWV1olXRWEXVA==}
 
-  '@socket.io/redis-adapter@8.3.0':
-    resolution: {integrity: sha512-ly0cra+48hDmChxmIpnESKrc94LjRL80TEmZVscuQ/WWkRP81nNj8W8cCGMqbI4L6NCuAaPRSzZF1a9GlAxxnA==}
-    engines: {node: '>=10.0.0'}
+  '@socket.io/postgres-adapter@0.5.0':
+    resolution: {integrity: sha512-s1vFsatB4lS429ZbeAi8ju+mZMgtgdSmi9UsZsdcEG++vVtX5z10yDEt4TV8saePscvvGjs6uXvJfMCxz8+M2Q==}
+    engines: {node: '>=12.0.0'}
     peerDependencies:
       socket.io-adapter: ^2.5.4
 
@@ -10297,6 +10272,7 @@ packages:
 
   node-abort-controller@3.1.1:
     resolution: {integrity: sha512-AGK2yQKIjRuqnc6VkX2Xj5d+QW8xZ87pa1UK6yA6ouUyuxfHuMP6umE5QK7UmTeOAymo+Zx1Fxiuw9rVx8taHQ==}
+    deprecated: This package is no longer needed on supported Node.js versions. Node.js 16+ includes AbortController and AbortSignal as built-in globals. All Node.js versions requiring this polyfill are end-of-life. Use the built-in globals instead.
 
   node-addon-api@4.3.0:
     resolution: {integrity: sha512-73sE9+3UaLYYFmDsFZnqCInzPyh3MqIwZO9cw58yIqAZhONrrabrYyYe3TuIqtIiOuTXVhsGau8hcrhhwSsDIQ==}
@@ -10370,9 +10346,6 @@ packages:
 
   not@0.1.0:
     resolution: {integrity: sha512-5PDmaAsVfnWUgTUbJ3ERwn7u79Z0dYxN9ErxCpVJJqe2RK0PJ3z+iFUxuqjwtlDDegXvtWoxD/3Fzxox7tFGWA==}
-
-  notepack.io@3.0.1:
-    resolution: {integrity: sha512-TKC/8zH5pXIAMVQio2TvVDTtPRX+DJPHDqjRbxogtFiByHyzKmy96RA0JtCQJ+WouyyL4A10xomQzgbUT+1jCg==}
 
   npm-run-path@4.0.1:
     resolution: {integrity: sha512-S48WzZW777zhNIrn7gxOlISNAqi9ZC/uQFnRdbeIHhZhCA6UqpkOT8T1G7BvfdgP4Er8gF4sUbaS0i7QvIfCWw==}
@@ -12845,10 +12818,6 @@ packages:
     resolution: {integrity: sha512-v3Xu+yuwBXisp6QYTcH4UbH+xYJXqnq2m/LtQVWKWzYc1iehYnLixoQDN9FH6/j9/oybfd6W9Ghwkl8+UMKTKQ==}
     engines: {node: '>=0.8.0'}
     hasBin: true
-
-  uid2@1.0.0:
-    resolution: {integrity: sha512-+I6aJUv63YAcY9n4mQreLUt0d4lvwkkopDNmpomkAUz0fAkEMV9pRWxN0EjhW1YfRhcuyHg2v3mwddCDW1+LFQ==}
-    engines: {node: '>= 4.0.0'}
 
   uid@2.0.2:
     resolution: {integrity: sha512-u3xV3X7uzvi5b1MncmZo3i2Aw222Zk1keqLA1YkHldREkAhAqi65wuPfe7lHx8H/Wzy+8CE7S7uS3jekIM5s8g==}
@@ -16634,7 +16603,8 @@ snapshots:
     dependencies:
       '@swc/helpers': 0.5.23
 
-  '@ioredis/commands@2.0.0': {}
+  '@ioredis/commands@2.0.0':
+    optional: true
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -17113,6 +17083,8 @@ snapshots:
 
   '@microsoft/tsdoc@0.17.1': {}
 
+  '@msgpack/msgpack@2.8.0': {}
+
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4':
     optional: true
 
@@ -17139,20 +17111,6 @@ snapshots:
       '@emnapi/runtime': 1.10.0
       '@tybys/wasm-util': 0.10.4
     optional: true
-
-  '@nestjs/bull-shared@12.0.0(@nestjs/common@12.2.0(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.2.0)':
-    dependencies:
-      '@nestjs/common': 12.2.0(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1)
-      '@nestjs/core': 12.2.0(@nestjs/common@12.2.0(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/platform-express@12.2.0)(@nestjs/websockets@12.2.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      tslib: 2.8.1
-
-  '@nestjs/bullmq@12.0.0(@nestjs/common@12.2.0(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.2.0)(bullmq@6.4.0(ioredis@6.0.0(supports-color@8.1.1))(pg@8.23.1))':
-    dependencies:
-      '@nestjs/bull-shared': 12.0.0(@nestjs/common@12.2.0(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.2.0)
-      '@nestjs/common': 12.2.0(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1)
-      '@nestjs/core': 12.2.0(@nestjs/common@12.2.0(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/platform-express@12.2.0)(@nestjs/websockets@12.2.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      bullmq: 6.4.0(ioredis@6.0.0(supports-color@8.1.1))(pg@8.23.1)
-      tslib: 2.8.1
 
   '@nestjs/cli@12.0.11(@swc/core@1.16.20(@swc/helpers@0.5.23))(@types/node@24.19.2)(fork-ts-checker-webpack-plugin@9.1.0(@typescript/typescript6@6.0.2)(webpack@5.108.4(@swc/core@1.16.20(@swc/helpers@0.5.23))(csso@5.0.5)(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.31)(uglify-js@3.19.3)))(prettier@3.9.10)(tsconfig-paths-webpack-plugin@4.2.0)(webpack-node-externals@3.0.0)(webpack@5.108.4(@swc/core@1.16.20(@swc/helpers@0.5.23))(csso@5.0.5)(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.31)(uglify-js@3.19.3))':
     dependencies:
@@ -17449,15 +17407,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@opentelemetry/instrumentation-ioredis@0.72.0(@opentelemetry/api@1.10.0)(supports-color@8.1.1)':
-    dependencies:
-      '@opentelemetry/api': 1.10.0
-      '@opentelemetry/instrumentation': 0.300.0(@opentelemetry/api@1.10.0)(supports-color@8.1.1)
-      '@opentelemetry/redis-common': 0.39.0
-      '@opentelemetry/semantic-conventions': 1.43.0
-    transitivePeerDependencies:
-      - supports-color
-
   '@opentelemetry/instrumentation-nestjs-core@0.71.0(@opentelemetry/api@1.10.0)(supports-color@8.1.1)':
     dependencies:
       '@opentelemetry/api': 1.10.0
@@ -17513,8 +17462,6 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.10.0
       '@opentelemetry/core': 3.0.0(@opentelemetry/api@1.10.0)
-
-  '@opentelemetry/redis-common@0.39.0': {}
 
   '@opentelemetry/resources@3.0.0(@opentelemetry/api@1.10.0)':
     dependencies:
@@ -18049,13 +17996,15 @@ snapshots:
 
   '@socket.io/component-emitter@3.1.2': {}
 
-  '@socket.io/redis-adapter@8.3.0(socket.io-adapter@2.5.8(supports-color@8.1.1))(supports-color@8.1.1)':
+  '@socket.io/postgres-adapter@0.5.0(socket.io-adapter@2.5.8(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
+      '@msgpack/msgpack': 2.8.0
+      '@types/pg': 8.23.1
       debug: 4.3.7(supports-color@8.1.1)
-      notepack.io: 3.0.1
+      pg: 8.23.1
       socket.io-adapter: 2.5.8(supports-color@8.1.1)
-      uid2: 1.0.0
     transitivePeerDependencies:
+      - pg-native
       - supports-color
 
   '@sphinxxxx/color-conversion@2.2.2': {}
@@ -18803,7 +18752,7 @@ snapshots:
 
   '@types/pg-pool@2.0.7':
     dependencies:
-      '@types/pg': 8.15.6
+      '@types/pg': 8.23.1
 
   '@types/pg@8.15.6':
     dependencies:
@@ -20170,7 +20119,8 @@ snapshots:
 
   clsx@2.1.1: {}
 
-  cluster-key-slot@1.1.1: {}
+  cluster-key-slot@1.1.1:
+    optional: true
 
   codemirror-wrapped-line-indent@1.0.9(@codemirror/language@6.12.4)(@codemirror/state@6.7.1)(@codemirror/view@6.43.7):
     dependencies:
@@ -20908,7 +20858,8 @@ snapshots:
 
   delegates@1.0.0: {}
 
-  denque@2.1.0: {}
+  denque@2.1.0:
+    optional: true
 
   depd@1.1.2: {}
 
@@ -22772,6 +22723,7 @@ snapshots:
       standard-as-callback: 2.1.0
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   ipaddr.js@1.9.1: {}
 
@@ -24499,8 +24451,6 @@ snapshots:
 
   not@0.1.0: {}
 
-  notepack.io@3.0.1: {}
-
   npm-run-path@4.0.1:
     dependencies:
       path-key: 3.1.1
@@ -25831,7 +25781,8 @@ snapshots:
       unified: 11.0.5
       vfile: 6.0.3
 
-  redis-errors@1.2.0: {}
+  redis-errors@1.2.0:
+    optional: true
 
   reflect-metadata@0.2.2: {}
 
@@ -26642,7 +26593,8 @@ snapshots:
 
   stable-hash-x@0.2.0: {}
 
-  standard-as-callback@2.1.0: {}
+  standard-as-callback@2.1.0:
+    optional: true
 
   statuses@1.5.0: {}
 
@@ -27476,8 +27428,6 @@ snapshots:
 
   uglify-js@3.19.3:
     optional: true
-
-  uid2@1.0.0: {}
 
   uid@2.0.2:
     dependencies:

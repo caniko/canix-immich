@@ -1,10 +1,8 @@
 import { DatabaseConnectionParams } from '@immich/sql-tools';
-import { RegisterQueueOptions } from '@nestjs/bullmq';
 import { Inject, Injectable, Optional } from '@nestjs/common';
-import { QueueOptions } from 'bullmq';
+import { DefaultJobOptions } from 'bullmq';
 import { Request, Response } from 'express';
 import { HelmetOptions } from 'helmet';
-import { RedisOptions } from 'ioredis';
 import { CLS_ID, ClsModuleOptions } from 'nestjs-cls';
 import { OpenTelemetryModuleOptions } from 'nestjs-otel/lib/interfaces/index.js';
 import { existsSync, readFileSync } from 'node:fs';
@@ -20,7 +18,6 @@ import {
   ImmichWorker,
   LogFormat,
   LogLevel,
-  QueueName,
 } from 'src/enum.js';
 import type { VectorExtension } from 'src/types.js';
 
@@ -49,8 +46,9 @@ export interface EnvData {
   };
 
   bull: {
-    config: QueueOptions;
-    queues: RegisterQueueOptions[];
+    config: {
+      defaultJobOptions: DefaultJobOptions;
+    };
   };
 
   cls: {
@@ -98,8 +96,6 @@ export interface EnvData {
     };
     corePlugin: string;
   };
-
-  redis: RedisOptions;
 
   setup: {
     allow: boolean;
@@ -234,24 +230,6 @@ const getEnv = (): EnvData => {
     web: join(buildFolder, 'www'),
   };
 
-  let redisConfig = {
-    host: dto.REDIS_HOSTNAME || 'redis',
-    port: dto.REDIS_PORT || 6379,
-    db: dto.REDIS_DBINDEX || 0,
-    username: dto.REDIS_USERNAME || undefined,
-    password: dto.REDIS_PASSWORD || undefined,
-    path: dto.REDIS_SOCKET || undefined,
-  };
-
-  const redisUrl = dto.REDIS_URL;
-  if (redisUrl && redisUrl.startsWith('ioredis://')) {
-    try {
-      redisConfig = JSON.parse(Buffer.from(redisUrl.slice(10), 'base64').toString());
-    } catch (error) {
-      throw new Error('Failed to decode redis options', { cause: error });
-    }
-  }
-
   const includedTelemetries =
     dto.IMMICH_TELEMETRY_INCLUDE === 'all'
       ? new Set(Object.values(ImmichTelemetry))
@@ -317,15 +295,12 @@ const getEnv = (): EnvData => {
 
     bull: {
       config: {
-        prefix: 'immich_bull',
-        connection: { ...redisConfig },
         defaultJobOptions: {
           attempts: 1,
           removeOnComplete: true,
           removeOnFail: false,
         },
       },
-      queues: Object.values(QueueName).map((name) => ({ name })),
     },
 
     cls: {
@@ -367,8 +342,6 @@ const getEnv = (): EnvData => {
         hostMetrics: telemetries.has(ImmichTelemetry.Host),
       },
     },
-
-    redis: redisConfig,
 
     resourcePaths: {
       lockFile: join(buildFolder, 'build-lock.json'),

@@ -11,10 +11,12 @@ export const envData: EnvData = {
   buildMetadata: {},
   bull: {
     config: {
-      connection: {},
-      prefix: 'immich_bull',
+      defaultJobOptions: {
+        attempts: 1,
+        removeOnComplete: true,
+        removeOnFail: false,
+      },
     },
-    queues: [{ name: 'queue-1' }],
   },
 
   cls: {
@@ -55,12 +57,6 @@ export const envData: EnvData = {
     metrics: {
       hostMetrics: false,
     },
-  },
-
-  redis: {
-    host: 'redis',
-    port: 6379,
-    db: 0,
   },
 
   resourcePaths: {

@@ -1,5 +1,4 @@
 import { OrchestrationApiModule, controllers as futoBackupsControllers } from '@futo-org/backups-orchestrator-api';
-import { BullModule } from '@nestjs/bullmq';
 import { Inject, Module, OnModuleDestroy, OnModuleInit, applyDecorators, forwardRef } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ScheduleModule, SchedulerRegistry } from '@nestjs/schedule';
@@ -58,7 +57,7 @@ const commonMiddleware = [
 const apiMiddleware = [FileUploadInterceptor, ...commonMiddleware, { provide: APP_GUARD, useClass: AuthGuard }];
 
 const configRepository = new ConfigRepository();
-const { bull, cls, database, environment, otel, storage } = configRepository.getEnv();
+const { cls, database, environment, otel, storage } = configRepository.getEnv();
 
 const isFutoBackupsDevelopmentMode = environment !== ImmichEnvironment.Production;
 const futoBackupsStatePath = getBackupsStatePath(storage.mediaLocation);
@@ -73,8 +72,6 @@ const commonImports = [
   KyselyModule.forRoot(getKyselyConfig(database.config)),
   OpenTelemetryModule.forRoot(otel),
 ];
-
-const bullImports = [BullModule.forRoot(bull.config), BullModule.registerQueue(...bull.queues)];
 
 // eslint-disable-next-line unicorn/no-top-level-side-effects
 configureUserAgent();
@@ -117,7 +114,6 @@ export class BaseModule implements OnModuleInit, OnModuleDestroy {
 
 @Module({
   imports: [
-    ...bullImports,
     ...commonImports,
     ScheduleModule.forRoot(),
     OrchestrationApiModule.forRootAsync({
@@ -201,13 +197,13 @@ export class MaintenanceModule {
 }
 
 @Module({
-  imports: [...bullImports, ...commonImports],
+  imports: [...commonImports],
   providers: [...common, { provide: IWorker, useValue: ImmichWorker.Microservices }, SchedulerRegistry],
 })
 export class MicroservicesModule extends BaseModule {}
 
 @Module({
-  imports: [...bullImports, ...commonImports],
+  imports: [...commonImports],
   providers: [...common, ...commandsAndQuestions, SchedulerRegistry],
 })
 export class ImmichAdminModule implements OnModuleDestroy {

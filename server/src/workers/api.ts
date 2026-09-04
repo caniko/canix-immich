@@ -22,7 +22,7 @@ async function bootstrap() {
   });
   app.get(AppRepository).setCloseFn(() => app.close());
 
-  void configureExpress(app, {
+  await configureExpress(app, {
     ssr: ApiService,
   });
 }

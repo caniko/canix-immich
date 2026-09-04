@@ -161,7 +161,7 @@ More information on available environment variables can be found in the **[envir
 :::info
 Some environment variables are not available for the TrueNAS Community Edition app as they can be configured through GUI options in the [Edit Immich screen](#edit-app-settings).
 
-Some examples are: `IMMICH_VERSION`, `UPLOAD_LOCATION`, `DB_DATA_LOCATION`, `TZ`, `IMMICH_LOG_LEVEL`, `DB_PASSWORD`, `REDIS_PASSWORD`.
+Some examples are: `IMMICH_VERSION`, `UPLOAD_LOCATION`, `DB_DATA_LOCATION`, `TZ`, `IMMICH_LOG_LEVEL`, `DB_PASSWORD`.
 :::
 
 </details>

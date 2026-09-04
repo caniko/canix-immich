@@ -80,8 +80,8 @@ export class QueueService extends BaseService {
   }
 
   @OnEvent({ name: 'AppBootstrap', priority: BootstrapEventPriority.JobService })
-  onBootstrap() {
-    this.jobRepository.setup(this.services);
+  async onBootstrap() {
+    await this.jobRepository.setup(this.services);
     if (this.worker === ImmichWorker.Microservices) {
       this.jobRepository.startWorkers();
     } else if (this.worker === ImmichWorker.Api) {
@@ -90,8 +90,8 @@ export class QueueService extends BaseService {
   }
 
   @OnEvent({ name: 'AppShutdown' })
-  onShutdown() {
-    this.jobRepository.teardown();
+  async onShutdown() {
+    await this.jobRepository.teardown();
   }
 
   private updateConcurrency(config: SystemConfig) {

@@ -25,7 +25,6 @@ services:
     ports:
       - '2283:2283'
     depends_on:
-      - redis
       - database
     restart: always
     healthcheck:
@@ -48,13 +47,6 @@ services:
     restart: always
     healthcheck:
       disable: false
-
-  redis:
-    container_name: immich_redis
-    image: docker.io/valkey/valkey:9@sha256:418652cfb58ef879d4978c33553735d7147016032d5aefaa14c828e611eb9dfd
-    healthcheck:
-      test: redis-cli ping | grep -q PONG || exit 1
-    restart: always
 
   database:
     container_name: immich_postgres

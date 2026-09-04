@@ -106,51 +106,7 @@ When `DB_URL` is defined, the `DB_HOSTNAME`, `DB_PORT`, `DB_USERNAME`, `DB_PASSW
 
 ## Redis
 
-| Variable         | Description    | Default | Containers |
-| :--------------- | :------------- | :-----: | :--------- |
-| `REDIS_URL`      | Redis URL      |         | server     |
-| `REDIS_SOCKET`   | Redis socket   |         | server     |
-| `REDIS_HOSTNAME` | Redis host     | `redis` | server     |
-| `REDIS_PORT`     | Redis port     | `6379`  | server     |
-| `REDIS_USERNAME` | Redis username |         | server     |
-| `REDIS_PASSWORD` | Redis password |         | server     |
-| `REDIS_DBINDEX`  | Redis DB index |   `0`   | server     |
-
-:::info
-All `REDIS_` variables must be provided to all Immich workers, including `api` and `microservices`.
-
-`REDIS_URL` must start with `ioredis://` and then include a `base64` encoded JSON string for the configuration.
-More information can be found in the upstream [ioredis] documentation.
-
-When `REDIS_URL` or `REDIS_SOCKET` are defined, the `REDIS_HOSTNAME`, `REDIS_PORT`, `REDIS_USERNAME`, `REDIS_PASSWORD`, and `REDIS_DBINDEX` variables are ignored.
-:::
-
-Redis (Sentinel) URL example JSON before encoding:
-
-<details>
-<summary>JSON</summary>
-
-```json
-{
-  "sentinels": [
-    {
-      "host": "redis-sentinel-node-0",
-      "port": 26379
-    },
-    {
-      "host": "redis-sentinel-node-1",
-      "port": 26379
-    },
-    {
-      "host": "redis-sentinel-node-2",
-      "port": 26379
-    }
-  ],
-  "name": "redis-sentinel"
-}
-```
-
-</details>
+Runtime Redis is unused. Job queues and websocket fan-out use the same Postgres as `DB_*`.
 
 ## Machine Learning
 
@@ -221,17 +177,11 @@ To use any of these, either set `CREDENTIALS_DIRECTORY` to a directory that cont
 | `DB_USERNAME`      | `DB_USERNAME_FILE`<sup>\*1</sup>            |
 | `DB_PASSWORD`      | `DB_PASSWORD_FILE`<sup>\*1</sup>            |
 | `DB_URL`           | `DB_URL_FILE`<sup>\*1</sup>                 |
-| `REDIS_PASSWORD`   | `REDIS_PASSWORD_FILE`<sup>\*2</sup>         |
 
 \*1: See the [official documentation][docker-secrets-docs] for
 details on how to use Docker Secrets in the Postgres image.
 
-\*2: See [this comment][docker-secrets-example] for an example of how
-to use a Docker secret for the password in the Redis container.
-
 [tz-list]: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List
-[docker-secrets-example]: https://github.com/docker-library/redis/issues/46#issuecomment-335326234
 [docker-secrets-docs]: https://github.com/docker-library/docs/tree/master/postgres#docker-secrets
 [docker-secrets]: https://docs.docker.com/engine/swarm/secrets/
-[ioredis]: https://ioredis.readthedocs.io/en/latest/README/#connect-to-redis
 [systemd-creds]: https://systemd.io/CREDENTIALS/

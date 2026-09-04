@@ -18,6 +18,7 @@ import {
 } from 'kysely';
 import { PostgresJSDialect } from 'kysely-postgres-js';
 import { jsonArrayFrom, jsonObjectFrom } from 'kysely/helpers/postgres';
+import { PoolConfig } from 'pg';
 import { Notice, PostgresError } from 'postgres';
 import { LockableProperty, Person, columns, lockableProperties } from 'src/database.js';
 import { DummyValue, GenerateSqlQueries } from 'src/decorators.js';
@@ -49,6 +50,31 @@ import { DB } from 'src/schema/index.js';
 import { AssetExifTable } from 'src/schema/tables/asset-exif.table.js';
 import type { AudioStreamInfo, VectorExtension, VideoFormat, VideoPacketInfo, VideoStreamInfo } from 'src/types.js';
 import { fromChecksum } from 'src/utils/request.js';
+
+export const getPgPoolConfig = (connection: DatabaseConnectionParams): PoolConfig => {
+  if (connection.connectionType === 'url') {
+    return { connectionString: connection.url };
+  }
+
+  return {
+    host: connection.host,
+    port: connection.port,
+    user: connection.username,
+    password: connection.password,
+    database: connection.database,
+    ssl: toPgSsl(connection.ssl),
+  };
+};
+
+const toPgSsl = (ssl?: string): PoolConfig['ssl'] => {
+  if (!ssl || ssl === 'disable' || ssl === 'allow') {
+    return false;
+  }
+  if (ssl === 'verify-full') {
+    return { rejectUnauthorized: true };
+  }
+  return { rejectUnauthorized: false };
+};
 
 export const getKyselyConfig = (connection: DatabaseConnectionParams): KyselyConfig => {
   return {

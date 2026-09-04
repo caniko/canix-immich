@@ -79,12 +79,5 @@ export const EnvSchema = z
     DB_USERNAME: z.string().optional(),
     DB_VECTOR_EXTENSION: z.enum(['pgvector', 'vectorchord']).optional(),
     NO_COLOR: z.string().optional(),
-    REDIS_HOSTNAME: z.string().optional(),
-    REDIS_PORT: z.coerce.number().int().optional(),
-    REDIS_DBINDEX: z.coerce.number().int().optional(),
-    REDIS_USERNAME: z.string().optional(),
-    REDIS_PASSWORD: z.string().optional(),
-    REDIS_SOCKET: z.string().optional(),
-    REDIS_URL: z.string().optional(),
   })
   .meta({ id: 'EnvDto' });

@@ -37,18 +37,10 @@ services:
     volumes:
       - ./test-assets:/test-assets
     depends_on:
-      redis:
-        condition: service_started
       database:
         condition: service_healthy
     ports:
       - 2285:2285
-
-  redis:
-    container_name: immich-e2e-redis
-    image: ghcr.io/valkey-io/valkey:9@sha256:3add1a336a920ea54770a001ab6feb3da5fceea96a40373a3a2cd469b815f0b7
-    healthcheck:
-      test: redis-cli ping || exit 1
 
   database:
     container_name: immich-e2e-postgres

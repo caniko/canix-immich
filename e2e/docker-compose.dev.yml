@@ -34,8 +34,6 @@ services:
     depends_on:
       immich-init:
         condition: service_healthy
-      redis:
-        condition: service_started
       database:
         condition: service_healthy
 
@@ -52,12 +50,6 @@ services:
       immich-init:
         condition: service_healthy
     restart: unless-stopped
-
-  redis:
-    extends:
-      file: ../docker/docker-compose.dev.yml
-      service: redis
-    container_name: immich-e2e-redis
 
   database:
     extends:

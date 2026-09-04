@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { isMainThread } from 'node:worker_threads';
 import { MicroservicesModule } from 'src/app.module.js';
 import { serverVersion } from 'src/constants.js';
-import { WebSocketAdapter } from 'src/middleware/websocket.adapter.js';
+import { createWebSocketAdapter } from 'src/middleware/websocket.adapter.js';
 import { AppRepository } from 'src/repositories/app.repository.js';
 import { ConfigRepository } from 'src/repositories/config.repository.js';
 import { LoggingRepository } from 'src/repositories/logging.repository.js';
@@ -24,7 +24,7 @@ export async function bootstrap() {
 
   logger.setContext('Bootstrap');
   app.useLogger(logger);
-  app.useWebSocketAdapter(new WebSocketAdapter(app));
+  app.useWebSocketAdapter(await createWebSocketAdapter(app));
 
   await (host ? app.listen(0, host) : app.listen(0));
 
