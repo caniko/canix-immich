@@ -6,7 +6,11 @@ import { ServerOptions } from 'socket.io';
 import { ConfigRepository } from 'src/repositories/config.repository.js';
 import { getPgPoolConfig } from 'src/utils/database.js';
 
+// API and microservices workers run this concurrently at startup; CREATE TABLE IF NOT EXISTS
+// can still collide on the catalog, so serialize it. A multi-statement simple query runs as one
+// implicit transaction, which holds the xact lock and rolls back on error.
 export const SOCKET_IO_ATTACHMENTS_SQL = `
+  SELECT pg_advisory_xact_lock(hashtext('socket_io_attachments'));
   CREATE TABLE IF NOT EXISTS socket_io_attachments (
     id          bigserial UNIQUE,
     created_at  timestamptz DEFAULT NOW(),
