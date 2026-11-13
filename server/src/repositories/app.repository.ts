@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { setTimeout as sleep } from 'node:timers/promises';
 import { createAdapter } from '@socket.io/postgres-adapter';
 import { Pool } from 'pg';
 import { Server as SocketIO } from 'socket.io';
@@ -45,6 +46,9 @@ export class AppRepository {
       });
       server.adapter(createAdapter(pool));
       await adapterReady;
+      // The heartbeat adapter acks only peers it has heard from; every live node publishes
+      // at least once per 5s heartbeat interval, so wait one interval before asking.
+      await sleep(6000);
 
       server.emit('AppRestartV1', state);
       const responses = await server.serverSideEmitWithAck('AppRestart', state);

@@ -233,13 +233,16 @@ export class JobRepository {
   }
 
   async getJobCounts(name: QueueName): Promise<JobCounts> {
-    return this.getQueue(name).getJobCounts(
+    // The Postgres backend reports a paused queue's waiting jobs as `paused`; Immich counts them as waiting.
+    const { paused, ...counts } = await this.getQueue(name).getJobCounts(
       'active',
       'completed',
       'failed',
       'delayed',
       'waiting',
-    ) as unknown as Promise<JobCounts>;
+      'paused',
+    );
+    return { ...counts, waiting: counts.waiting + paused } as unknown as JobCounts;
   }
 
   private getQueueName(name: JobName) {
@@ -297,17 +300,12 @@ export class JobRepository {
   }
 
   async searchJobs(name: QueueName, dto: QueueJobSearchDto): Promise<QueueJobResponseDto[]> {
-    const queue = this.getQueue(name);
-    const isPaused = await queue.isPaused();
-    const statuses = (dto.status ?? Object.values(QueueJobStatus))
-      .filter((status) =>
-        status === QueueJobStatus.Paused ? isPaused : !(isPaused && status === QueueJobStatus.Waiting),
-      )
-      .map((status) => (status === QueueJobStatus.Paused ? QueueJobStatus.Waiting : status)) as JobType[];
-    if (statuses.length === 0) {
-      return [];
+    const items = new Set<QueueJobStatus>(dto.status ?? Object.values(QueueJobStatus));
+    if (items.delete(QueueJobStatus.Paused)) {
+      items.add(QueueJobStatus.Waiting);
     }
-    const jobs = await queue.getJobs(statuses, 0, 1000);
+
+    const jobs = await this.getQueue(name).getJobs([...items] as JobType[], 0, 1000);
     return jobs.map((job) => {
       const { id, name, timestamp, data } = job;
       return { id, name: name as JobName, timestamp, data };

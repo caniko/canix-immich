@@ -16,7 +16,8 @@ export const SOCKET_IO_ATTACHMENTS_SQL = `
 
 export const createWebSocketAdapter = async (app: INestApplicationContext): Promise<WebSocketAdapter> => {
   const { database } = app.get(ConfigRepository).getEnv();
-  const pool = new Pool({ ...getPgPoolConfig(database.config), max: 2 });
+  // Each Socket.IO server's adapter pins one client for LISTEN; leave pg's default headroom for queries.
+  const pool = new Pool(getPgPoolConfig(database.config));
   try {
     await pool.query(SOCKET_IO_ATTACHMENTS_SQL);
     return new WebSocketAdapter(app, pool);
@@ -45,8 +46,9 @@ export class WebSocketAdapter extends IoAdapter {
     return server;
   }
 
-  async close(server: any) {
-    await super.close(server);
+  // Nest calls close() once per server, then dispose() once: end the shared pool here.
+  async dispose() {
+    await super.dispose();
     await this.pool.end();
   }
 }
